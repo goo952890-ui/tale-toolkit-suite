@@ -253,3 +253,25 @@ export const deleteComment = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const getSetting = createServerFn({ method: "GET" })
+  .inputValidator((d: { key: string }) => z.object({ key: z.string().min(1) }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("site_settings").select("key, value").eq("key", data.key).maybeSingle();
+    if (error) throw new Error(error.message);
+    return row?.value ?? "";
+  });
+
+export const setSetting = createServerFn({ method: "POST" })
+  .inputValidator((d: { key: string; value: string }) =>
+    z.object({ key: z.string().min(1), value: z.string().max(200000) }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("site_settings")
+      .upsert({ key: data.key, value: data.value, updated_at: new Date().toISOString() });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
