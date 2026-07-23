@@ -22,7 +22,9 @@ import { Route as DjemalsPostsIndexRouteImport } from './routes/djemals.posts.in
 import { Route as DjemalsPostsNewRouteImport } from './routes/djemals.posts.new'
 import { Route as DjemalsPostsIdRouteImport } from './routes/djemals.posts.$id'
 import { Route as ApiPublicPostsRouteImport } from './routes/api/public/posts'
+import { Route as ApiPublicImagesRouteImport } from './routes/api/public/images'
 import { Route as ApiPublicCommentsRouteImport } from './routes/api/public/comments'
+import { Route as ApiPublicImagesKeyRouteImport } from './routes/api/public/images.$key'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -89,10 +91,20 @@ const ApiPublicPostsRoute = ApiPublicPostsRouteImport.update({
   path: '/api/public/posts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicImagesRoute = ApiPublicImagesRouteImport.update({
+  id: '/api/public/images',
+  path: '/api/public/images',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCommentsRoute = ApiPublicCommentsRouteImport.update({
   id: '/api/public/comments',
   path: '/api/public/comments',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicImagesKeyRoute = ApiPublicImagesKeyRouteImport.update({
+  id: '/$key',
+  path: '/$key',
+  getParentRoute: () => ApiPublicImagesRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -106,10 +118,12 @@ export interface FileRoutesByFullPath {
   '/post/$slug': typeof PostSlugRoute
   '/djemals/': typeof DjemalsIndexRoute
   '/api/public/comments': typeof ApiPublicCommentsRoute
+  '/api/public/images': typeof ApiPublicImagesRouteWithChildren
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
   '/djemals/posts/': typeof DjemalsPostsIndexRoute
+  '/api/public/images/$key': typeof ApiPublicImagesKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,10 +134,12 @@ export interface FileRoutesByTo {
   '/post/$slug': typeof PostSlugRoute
   '/djemals': typeof DjemalsIndexRoute
   '/api/public/comments': typeof ApiPublicCommentsRoute
+  '/api/public/images': typeof ApiPublicImagesRouteWithChildren
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
   '/djemals/posts': typeof DjemalsPostsIndexRoute
+  '/api/public/images/$key': typeof ApiPublicImagesKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,10 +153,12 @@ export interface FileRoutesById {
   '/post/$slug': typeof PostSlugRoute
   '/djemals/': typeof DjemalsIndexRoute
   '/api/public/comments': typeof ApiPublicCommentsRoute
+  '/api/public/images': typeof ApiPublicImagesRouteWithChildren
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
   '/djemals/posts/': typeof DjemalsPostsIndexRoute
+  '/api/public/images/$key': typeof ApiPublicImagesKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,10 +173,12 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/djemals/'
     | '/api/public/comments'
+    | '/api/public/images'
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
     | '/djemals/posts/'
+    | '/api/public/images/$key'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,10 +189,12 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/djemals'
     | '/api/public/comments'
+    | '/api/public/images'
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
     | '/djemals/posts'
+    | '/api/public/images/$key'
   id:
     | '__root__'
     | '/'
@@ -185,10 +207,12 @@ export interface FileRouteTypes {
     | '/post/$slug'
     | '/djemals/'
     | '/api/public/comments'
+    | '/api/public/images'
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
     | '/djemals/posts/'
+    | '/api/public/images/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +222,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   PostSlugRoute: typeof PostSlugRoute
   ApiPublicCommentsRoute: typeof ApiPublicCommentsRoute
+  ApiPublicImagesRoute: typeof ApiPublicImagesRouteWithChildren
   ApiPublicPostsRoute: typeof ApiPublicPostsRoute
 }
 
@@ -294,12 +319,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPostsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/images': {
+      id: '/api/public/images'
+      path: '/api/public/images'
+      fullPath: '/api/public/images'
+      preLoaderRoute: typeof ApiPublicImagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/comments': {
       id: '/api/public/comments'
       path: '/api/public/comments'
       fullPath: '/api/public/comments'
       preLoaderRoute: typeof ApiPublicCommentsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/images/$key': {
+      id: '/api/public/images/$key'
+      path: '/$key'
+      fullPath: '/api/public/images/$key'
+      preLoaderRoute: typeof ApiPublicImagesKeyRouteImport
+      parentRoute: typeof ApiPublicImagesRoute
     }
   }
 }
@@ -337,6 +376,18 @@ const DjemalsRouteChildren: DjemalsRouteChildren = {
 const DjemalsRouteWithChildren =
   DjemalsRoute._addFileChildren(DjemalsRouteChildren)
 
+interface ApiPublicImagesRouteChildren {
+  ApiPublicImagesKeyRoute: typeof ApiPublicImagesKeyRoute
+}
+
+const ApiPublicImagesRouteChildren: ApiPublicImagesRouteChildren = {
+  ApiPublicImagesKeyRoute: ApiPublicImagesKeyRoute,
+}
+
+const ApiPublicImagesRouteWithChildren = ApiPublicImagesRoute._addFileChildren(
+  ApiPublicImagesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DjemalsRoute: DjemalsRouteWithChildren,
@@ -344,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   PostSlugRoute: PostSlugRoute,
   ApiPublicCommentsRoute: ApiPublicCommentsRoute,
+  ApiPublicImagesRoute: ApiPublicImagesRouteWithChildren,
   ApiPublicPostsRoute: ApiPublicPostsRoute,
 }
 export const routeTree = rootRouteImport
