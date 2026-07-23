@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/blog.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { MarkdownEditor } from "@/components/MarkdownEditor";
+// keep useRef import for file inputs
 
 type Category = { id: string; name: string; slug: string };
 type Initial = {
@@ -64,7 +65,7 @@ export function PostForm({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
 
   const upload = useServerFn(uploadImage);
-  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const inlineInputRef = useRef<HTMLInputElement | null>(null);
 
