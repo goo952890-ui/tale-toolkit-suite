@@ -15,22 +15,21 @@ export const Route = createFileRoute("/post/$slug")({
     context.queryClient.ensureQueryData(categoriesQ);
     const data = await context.queryClient.ensureQueryData(postQ(params.slug));
     if (!data) throw notFound();
+    return { title: data.post.title, excerpt: data.post.excerpt, cover: data.post.cover_image };
   },
-  head: ({ params, loaderData: _l, match }) => {
-    const data = match?.context?.queryClient?.getQueryData<{ post: { title: string; excerpt?: string | null; cover_image?: string | null } } | null>(["post", params.slug]);
-    const p = data?.post;
-    const title = p ? `${p.title} — mysextrip` : "mysextrip";
-    const desc = p?.excerpt ?? "Travel writing worth reading.";
-    const meta = [
+  head: ({ loaderData }) => {
+    const title = loaderData ? `${loaderData.title} — mysextrip` : "mysextrip";
+    const desc = loaderData?.excerpt ?? "Travel writing worth reading.";
+    const meta: Array<{ title?: string; name?: string; property?: string; content?: string }> = [
       { title },
       { name: "description", content: desc },
       { property: "og:title", content: title },
       { property: "og:description", content: desc },
       { property: "og:type", content: "article" },
     ];
-    if (p?.cover_image) {
-      meta.push({ property: "og:image", content: p.cover_image });
-      meta.push({ name: "twitter:image", content: p.cover_image });
+    if (loaderData?.cover) {
+      meta.push({ property: "og:image", content: loaderData.cover });
+      meta.push({ name: "twitter:image", content: loaderData.cover });
     }
     return { meta };
   },
