@@ -20,6 +20,9 @@ export function SiteHeader({ categories }: { categories: { slug: string; name: s
               {c.name}
             </Link>
           ))}
+          <Link to="/about" className="hover:text-primary" activeProps={{ className: "text-primary" }}>
+            About Me
+          </Link>
         </nav>
       </div>
     </header>

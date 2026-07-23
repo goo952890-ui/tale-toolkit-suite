@@ -10,6 +10,8 @@ const tabs = [
   { to: "/djemals/posts", label: "Posts" },
   { to: "/djemals/categories", label: "Categories" },
   { to: "/djemals/comments", label: "Comments" },
+  { to: "/djemals/about", label: "About Me" },
+  { to: "/djemals/api-docs", label: "API Docs" },
 ];
 
 function AdminLayout() {

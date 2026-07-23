@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DjemalsRouteImport } from './routes/djemals'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DjemalsIndexRouteImport } from './routes/djemals.index'
 import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as DjemalsPostsRouteImport } from './routes/djemals.posts'
 import { Route as DjemalsCommentsRouteImport } from './routes/djemals.comments'
 import { Route as DjemalsCategoriesRouteImport } from './routes/djemals.categories'
+import { Route as DjemalsApiDocsRouteImport } from './routes/djemals.api-docs'
+import { Route as DjemalsAboutRouteImport } from './routes/djemals.about'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as DjemalsPostsIndexRouteImport } from './routes/djemals.posts.index'
 import { Route as DjemalsPostsNewRouteImport } from './routes/djemals.posts.new'
@@ -34,6 +37,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const DjemalsRoute = DjemalsRouteImport.update({
   id: '/djemals',
   path: '/djemals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -64,6 +72,16 @@ const DjemalsCommentsRoute = DjemalsCommentsRouteImport.update({
 const DjemalsCategoriesRoute = DjemalsCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => DjemalsRoute,
+} as any)
+const DjemalsApiDocsRoute = DjemalsApiDocsRouteImport.update({
+  id: '/api-docs',
+  path: '/api-docs',
+  getParentRoute: () => DjemalsRoute,
+} as any)
+const DjemalsAboutRoute = DjemalsAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => DjemalsRoute,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -109,9 +127,12 @@ const ApiPublicImagesKeyRoute = ApiPublicImagesKeyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/djemals': typeof DjemalsRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/djemals/posts': typeof DjemalsPostsRouteWithChildren
@@ -127,8 +148,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/post/$slug': typeof PostSlugRoute
@@ -144,9 +168,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/djemals': typeof DjemalsRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/djemals/posts': typeof DjemalsPostsRouteWithChildren
@@ -164,9 +191,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/djemals'
     | '/sitemap.xml'
     | '/category/$slug'
+    | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/djemals/posts'
@@ -182,8 +212,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/sitemap.xml'
     | '/category/$slug'
+    | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/post/$slug'
@@ -198,9 +231,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/djemals'
     | '/sitemap.xml'
     | '/category/$slug'
+    | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/djemals/posts'
@@ -217,6 +253,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   DjemalsRoute: typeof DjemalsRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CategorySlugRoute: typeof CategorySlugRoute
@@ -240,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/djemals'
       fullPath: '/djemals'
       preLoaderRoute: typeof DjemalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -282,6 +326,20 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/djemals/categories'
       preLoaderRoute: typeof DjemalsCategoriesRouteImport
+      parentRoute: typeof DjemalsRoute
+    }
+    '/djemals/api-docs': {
+      id: '/djemals/api-docs'
+      path: '/api-docs'
+      fullPath: '/djemals/api-docs'
+      preLoaderRoute: typeof DjemalsApiDocsRouteImport
+      parentRoute: typeof DjemalsRoute
+    }
+    '/djemals/about': {
+      id: '/djemals/about'
+      path: '/about'
+      fullPath: '/djemals/about'
+      preLoaderRoute: typeof DjemalsAboutRouteImport
       parentRoute: typeof DjemalsRoute
     }
     '/category/$slug': {
@@ -360,6 +418,8 @@ const DjemalsPostsRouteWithChildren = DjemalsPostsRoute._addFileChildren(
 )
 
 interface DjemalsRouteChildren {
+  DjemalsAboutRoute: typeof DjemalsAboutRoute
+  DjemalsApiDocsRoute: typeof DjemalsApiDocsRoute
   DjemalsCategoriesRoute: typeof DjemalsCategoriesRoute
   DjemalsCommentsRoute: typeof DjemalsCommentsRoute
   DjemalsPostsRoute: typeof DjemalsPostsRouteWithChildren
@@ -367,6 +427,8 @@ interface DjemalsRouteChildren {
 }
 
 const DjemalsRouteChildren: DjemalsRouteChildren = {
+  DjemalsAboutRoute: DjemalsAboutRoute,
+  DjemalsApiDocsRoute: DjemalsApiDocsRoute,
   DjemalsCategoriesRoute: DjemalsCategoriesRoute,
   DjemalsCommentsRoute: DjemalsCommentsRoute,
   DjemalsPostsRoute: DjemalsPostsRouteWithChildren,
@@ -390,6 +452,7 @@ const ApiPublicImagesRouteWithChildren = ApiPublicImagesRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   DjemalsRoute: DjemalsRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CategorySlugRoute: CategorySlugRoute,
