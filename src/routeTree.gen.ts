@@ -18,6 +18,7 @@ import { Route as PostSlugRouteImport } from './routes/post.$slug'
 import { Route as DjemalsPostsRouteImport } from './routes/djemals.posts'
 import { Route as DjemalsCommentsRouteImport } from './routes/djemals.comments'
 import { Route as DjemalsCategoriesRouteImport } from './routes/djemals.categories'
+import { Route as DjemalsApiDocsRouteImport } from './routes/djemals.api-docs'
 import { Route as DjemalsAboutRouteImport } from './routes/djemals.about'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as DjemalsPostsIndexRouteImport } from './routes/djemals.posts.index'
@@ -73,6 +74,11 @@ const DjemalsCategoriesRoute = DjemalsCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => DjemalsRoute,
 } as any)
+const DjemalsApiDocsRoute = DjemalsApiDocsRouteImport.update({
+  id: '/api-docs',
+  path: '/api-docs',
+  getParentRoute: () => DjemalsRoute,
+} as any)
 const DjemalsAboutRoute = DjemalsAboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/djemals/posts': typeof DjemalsPostsRouteWithChildren
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/post/$slug': typeof PostSlugRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/about': typeof DjemalsAboutRoute
+  '/djemals/api-docs': typeof DjemalsApiDocsRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
   '/djemals/posts': typeof DjemalsPostsRouteWithChildren
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/djemals/posts'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/post/$slug'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/about'
+    | '/djemals/api-docs'
     | '/djemals/categories'
     | '/djemals/comments'
     | '/djemals/posts'
@@ -316,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DjemalsCategoriesRouteImport
       parentRoute: typeof DjemalsRoute
     }
+    '/djemals/api-docs': {
+      id: '/djemals/api-docs'
+      path: '/api-docs'
+      fullPath: '/djemals/api-docs'
+      preLoaderRoute: typeof DjemalsApiDocsRouteImport
+      parentRoute: typeof DjemalsRoute
+    }
     '/djemals/about': {
       id: '/djemals/about'
       path: '/about'
@@ -400,6 +419,7 @@ const DjemalsPostsRouteWithChildren = DjemalsPostsRoute._addFileChildren(
 
 interface DjemalsRouteChildren {
   DjemalsAboutRoute: typeof DjemalsAboutRoute
+  DjemalsApiDocsRoute: typeof DjemalsApiDocsRoute
   DjemalsCategoriesRoute: typeof DjemalsCategoriesRoute
   DjemalsCommentsRoute: typeof DjemalsCommentsRoute
   DjemalsPostsRoute: typeof DjemalsPostsRouteWithChildren
@@ -408,6 +428,7 @@ interface DjemalsRouteChildren {
 
 const DjemalsRouteChildren: DjemalsRouteChildren = {
   DjemalsAboutRoute: DjemalsAboutRoute,
+  DjemalsApiDocsRoute: DjemalsApiDocsRoute,
   DjemalsCategoriesRoute: DjemalsCategoriesRoute,
   DjemalsCommentsRoute: DjemalsCommentsRoute,
   DjemalsPostsRoute: DjemalsPostsRouteWithChildren,
