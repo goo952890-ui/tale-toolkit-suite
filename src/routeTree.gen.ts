@@ -18,6 +18,7 @@ import { Route as DjemalsPostsRouteImport } from './routes/djemals.posts'
 import { Route as DjemalsCommentsRouteImport } from './routes/djemals.comments'
 import { Route as DjemalsCategoriesRouteImport } from './routes/djemals.categories'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as DjemalsPostsIndexRouteImport } from './routes/djemals.posts.index'
 import { Route as DjemalsPostsNewRouteImport } from './routes/djemals.posts.new'
 import { Route as DjemalsPostsIdRouteImport } from './routes/djemals.posts.$id'
 import { Route as ApiPublicPostsRouteImport } from './routes/api/public/posts'
@@ -68,6 +69,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DjemalsPostsIndexRoute = DjemalsPostsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DjemalsPostsRoute,
+} as any)
 const DjemalsPostsNewRoute = DjemalsPostsNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
+  '/djemals/posts/': typeof DjemalsPostsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,13 +117,13 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
-  '/djemals/posts': typeof DjemalsPostsRouteWithChildren
   '/post/$slug': typeof PostSlugRoute
   '/djemals': typeof DjemalsIndexRoute
   '/api/public/comments': typeof ApiPublicCommentsRoute
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
+  '/djemals/posts': typeof DjemalsPostsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,6 +140,7 @@ export interface FileRoutesById {
   '/api/public/posts': typeof ApiPublicPostsRoute
   '/djemals/posts/$id': typeof DjemalsPostsIdRoute
   '/djemals/posts/new': typeof DjemalsPostsNewRoute
+  '/djemals/posts/': typeof DjemalsPostsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,6 +158,7 @@ export interface FileRouteTypes {
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
+    | '/djemals/posts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,13 +166,13 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/djemals/categories'
     | '/djemals/comments'
-    | '/djemals/posts'
     | '/post/$slug'
     | '/djemals'
     | '/api/public/comments'
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
+    | '/djemals/posts'
   id:
     | '__root__'
     | '/'
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/public/posts'
     | '/djemals/posts/$id'
     | '/djemals/posts/new'
+    | '/djemals/posts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/djemals/posts/': {
+      id: '/djemals/posts/'
+      path: '/'
+      fullPath: '/djemals/posts/'
+      preLoaderRoute: typeof DjemalsPostsIndexRouteImport
+      parentRoute: typeof DjemalsPostsRoute
+    }
     '/djemals/posts/new': {
       id: '/djemals/posts/new'
       path: '/new'
@@ -290,11 +307,13 @@ declare module '@tanstack/react-router' {
 interface DjemalsPostsRouteChildren {
   DjemalsPostsIdRoute: typeof DjemalsPostsIdRoute
   DjemalsPostsNewRoute: typeof DjemalsPostsNewRoute
+  DjemalsPostsIndexRoute: typeof DjemalsPostsIndexRoute
 }
 
 const DjemalsPostsRouteChildren: DjemalsPostsRouteChildren = {
   DjemalsPostsIdRoute: DjemalsPostsIdRoute,
   DjemalsPostsNewRoute: DjemalsPostsNewRoute,
+  DjemalsPostsIndexRoute: DjemalsPostsIndexRoute,
 }
 
 const DjemalsPostsRouteWithChildren = DjemalsPostsRoute._addFileChildren(
@@ -330,3 +349,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
