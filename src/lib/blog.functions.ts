@@ -98,7 +98,7 @@ const postInput = z.object({
   slug: z.string().optional(),
   excerpt: z.string().max(500).optional().nullable(),
   content: z.string().default(""),
-  cover_image: z.string().url().optional().nullable().or(z.literal("")),
+  cover_image: z.string().optional().nullable(),
   category_id: z.string().uuid().optional().nullable(),
   author_name: z.string().min(1).max(80).default("Editor"),
   published: z.boolean().default(true),
