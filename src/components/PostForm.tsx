@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/blog.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
+// keep useRef import for file inputs
 
 type Category = { id: string; name: string; slug: string };
 type Initial = {
@@ -63,7 +65,7 @@ export function PostForm({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
 
   const upload = useServerFn(uploadImage);
-  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const inlineInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -87,26 +89,12 @@ export function PostForm({
     try {
       const dataUrl = await fileToDataUrl(file);
       const res = await upload({ data: { data_url: dataUrl } });
-      insertAtCursor(`\n\n![](${res.url})\n\n`);
+      setContent((c) => (c ? c + `\n\n![](${res.url})\n\n` : `![](${res.url})\n`));
     } catch (e) {
       setUploadErr(e instanceof Error ? e.message : "upload failed");
     } finally {
       setUploading(null);
     }
-  }
-
-  function insertAtCursor(snippet: string) {
-    const ta = contentRef.current;
-    if (!ta) { setContent((c) => c + snippet); return; }
-    const start = ta.selectionStart ?? content.length;
-    const end = ta.selectionEnd ?? content.length;
-    const next = content.slice(0, start) + snippet + content.slice(end);
-    setContent(next);
-    requestAnimationFrame(() => {
-      ta.focus();
-      const pos = start + snippet.length;
-      ta.setSelectionRange(pos, pos);
-    });
   }
 
   return (
@@ -134,23 +122,16 @@ export function PostForm({
             disabled={uploading !== null}
             className="rounded border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
           >
-            {uploading === "inline" ? "Uploading..." : "📷 Insert image at cursor"}
+            {uploading === "inline" ? "Uploading..." : "📷 Upload image → appended to body"}
           </button>
-          <span className="text-[11px] text-muted-foreground">Uses <code>![](url)</code> markdown. Move it anywhere in the text.</span>
+          <span className="text-[11px] text-muted-foreground">Then move the <code>![](url)</code> line wherever you want it.</span>
           <input
             ref={inlineInputRef} type="file" accept="image/*" className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleInlineFile(f); e.target.value = ""; }}
           />
         </div>
 
-        <textarea
-          ref={contentRef}
-          className="w-full rounded border border-input bg-background px-3 py-2 font-mono text-sm"
-          rows={20}
-          placeholder="Body. Blank lines make paragraphs. Insert images with ![alt](url)."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+        <MarkdownEditor value={content} onChange={setContent} height={500} placeholder="Body. Use markdown. Blank lines make paragraphs. Insert images with ![alt](url)." />
       </div>
       <aside className="space-y-4 rounded-lg border border-border bg-card p-5">
         <div>

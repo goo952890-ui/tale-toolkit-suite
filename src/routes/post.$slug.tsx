@@ -2,19 +2,26 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { getPostBySlug, listCategories, createComment } from "@/lib/blog.functions";
+import { getPostBySlug, listCategories, createComment, listRelatedPosts } from "@/lib/blog.functions";
 import { SiteShell } from "@/components/SiteChrome";
 import { AdSlot } from "@/components/AdSlot";
+import { useCaptcha, CaptchaField } from "@/components/Captcha";
 
 const categoriesQ = queryOptions({ queryKey: ["categories"], queryFn: () => listCategories() });
 const postQ = (slug: string) =>
   queryOptions({ queryKey: ["post", slug], queryFn: () => getPostBySlug({ data: { slug } }) });
+const relatedQ = (categorySlug: string | null | undefined, excludeSlug: string) =>
+  queryOptions({
+    queryKey: ["related", categorySlug ?? "_none", excludeSlug],
+    queryFn: () => listRelatedPosts({ data: { categorySlug: categorySlug ?? null, excludeSlug, limit: 5 } }),
+  });
 
 export const Route = createFileRoute("/post/$slug")({
   loader: async ({ context, params }) => {
     context.queryClient.ensureQueryData(categoriesQ);
     const data = await context.queryClient.ensureQueryData(postQ(params.slug));
     if (!data) throw notFound();
+    context.queryClient.ensureQueryData(relatedQ(data.post.category?.slug ?? null, params.slug));
     return { title: data.post.title, excerpt: data.post.excerpt, cover: data.post.cover_image };
   },
   head: ({ loaderData }) => {
@@ -70,7 +77,6 @@ function renderContent(content: string) {
   });
 }
 
-
 type CommentRow = {
   id: string;
   post_id: string;
@@ -102,6 +108,8 @@ function CommentItem({ comment, postId, onReplyPosted }: { comment: CommentRow; 
   const [name, setName] = useState("");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const cap = useCaptcha();
   const post = useServerFn(createComment);
   return (
     <div>
@@ -119,10 +127,11 @@ function CommentItem({ comment, postId, onReplyPosted }: { comment: CommentRow; 
           onSubmit={async (e) => {
             e.preventDefault();
             if (!name.trim() || !text.trim()) return;
-            setBusy(true);
+            if (!cap.valid) { setErr("Captcha answer is wrong."); return; }
+            setBusy(true); setErr(null);
             try {
               await post({ data: { post_id: postId, parent_id: comment.id, author_name: name, content: text } });
-              setName(""); setText(""); setOpen(false);
+              setName(""); setText(""); setOpen(false); cap.reset();
               onReplyPosted();
             } finally { setBusy(false); }
           }}
@@ -135,6 +144,8 @@ function CommentItem({ comment, postId, onReplyPosted }: { comment: CommentRow; 
             className="w-full rounded border border-input bg-background px-3 py-2 text-sm" rows={3}
             placeholder="Reply..." value={text} onChange={(e) => setText(e.target.value)} maxLength={2000}
           />
+          <CaptchaField question={cap.question} value={cap.user} onChange={cap.setUser} />
+          {err && <p className="text-xs text-destructive">{err}</p>}
           <button disabled={busy} className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-60">
             {busy ? "Posting..." : "Post reply"}
           </button>
@@ -152,9 +163,12 @@ function PostPage() {
   const [name, setName] = useState("");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const cap = useCaptcha();
   const post = useServerFn(createComment);
   if (!data) return null;
   const { post: p, comments } = data;
+  const { data: related } = useSuspenseQuery(relatedQ(p.category?.slug ?? null, slug));
   const refresh = () => qc.invalidateQueries({ queryKey: ["post", slug] });
 
   return (
@@ -177,49 +191,77 @@ function PostPage() {
             <img src={p.cover_image} alt="" className="h-full w-full object-cover" />
           </div>
         )}
-        <div className="mx-auto mt-10 max-w-3xl">
-          <AdSlot size="leaderboard" />
-        </div>
-        <div className="mx-auto mt-10 max-w-3xl prose-blog">
-          {renderContent(p.content)}
-        </div>
 
-        <div className="mx-auto my-12 max-w-3xl">
-          <AdSlot size="inline" />
-        </div>
+        <div className="mx-auto mt-10 grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0">
+            <div className="prose-blog">{renderContent(p.content)}</div>
 
-        <section className="mx-auto max-w-3xl">
-          <h2 className="font-serif text-2xl font-bold">Comments</h2>
-          <form
-            className="mt-4 space-y-2"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!name.trim() || !text.trim()) return;
-              setBusy(true);
-              try {
-                await post({ data: { post_id: p.id, author_name: name, content: text } });
-                setName(""); setText(""); refresh();
-              } finally { setBusy(false); }
-            }}
-          >
-            <input
-              className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={50}
-            />
-            <textarea
-              className="w-full rounded border border-input bg-background px-3 py-2 text-sm" rows={4}
-              placeholder="Say something..." value={text} onChange={(e) => setText(e.target.value)} maxLength={2000}
-            />
-            <button disabled={busy} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-60">
-              {busy ? "Posting..." : "Post comment"}
-            </button>
-          </form>
+            <section className="mt-12">
+              <h2 className="font-serif text-2xl font-bold">Comments</h2>
+              <form
+                className="mt-4 space-y-2"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!name.trim() || !text.trim()) return;
+                  if (!cap.valid) { setErr("Captcha answer is wrong."); return; }
+                  setBusy(true); setErr(null);
+                  try {
+                    await post({ data: { post_id: p.id, author_name: name, content: text } });
+                    setName(""); setText(""); cap.reset(); refresh();
+                  } finally { setBusy(false); }
+                }}
+              >
+                <input
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+                  placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={50}
+                />
+                <textarea
+                  className="w-full rounded border border-input bg-background px-3 py-2 text-sm" rows={4}
+                  placeholder="Say something..." value={text} onChange={(e) => setText(e.target.value)} maxLength={2000}
+                />
+                <CaptchaField question={cap.question} value={cap.user} onChange={cap.setUser} />
+                {err && <p className="text-xs text-destructive">{err}</p>}
+                <button disabled={busy} className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-60">
+                  {busy ? "Posting..." : "Post comment"}
+                </button>
+              </form>
 
-          <div className="mt-8">
-            <CommentThread items={comments as CommentRow[]} postId={p.id} onReplyPosted={refresh} />
-            {comments.length === 0 && <p className="text-sm text-muted-foreground">Be the first to comment.</p>}
+              <div className="mt-8">
+                <CommentThread items={comments as CommentRow[]} postId={p.id} onReplyPosted={refresh} />
+                {comments.length === 0 && <p className="text-sm text-muted-foreground">Be the first to comment.</p>}
+              </div>
+            </section>
           </div>
-        </section>
+
+          <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+            <AdSlot size="square" />
+            {related.length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-5">
+                <h4 className="font-serif text-lg font-semibold">
+                  {p.category ? `More in ${p.category.name}` : "More stories"}
+                </h4>
+                <ul className="mt-4 space-y-4">
+                  {related.map((r) => (
+                    <li key={r.id}>
+                      <Link to="/post/$slug" params={{ slug: r.slug }} className="group flex gap-3">
+                        <div className="h-16 w-20 shrink-0 overflow-hidden rounded bg-muted">
+                          {r.cover_image && (
+                            <img src={r.cover_image} alt="" className="h-full w-full object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-primary">{r.title}</div>
+                          <div className="mt-1 text-[11px] text-muted-foreground">{fmtDate(r.published_at)}</div>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <AdSlot size="skyscraper" />
+          </aside>
+        </div>
       </article>
     </SiteShell>
   );

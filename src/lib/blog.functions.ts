@@ -275,3 +275,62 @@ export const setSetting = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const ABOUT_SLUG = "_about";
+
+export const getAboutPost = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: post, error } = await supabaseAdmin
+    .from("posts")
+    .select("id, slug, title, content, cover_image, author_name, published_at")
+    .eq("slug", ABOUT_SLUG)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!post) return null;
+  const { data: comments } = await supabaseAdmin
+    .from("comments")
+    .select("id, post_id, parent_id, author_name, content, created_at, approved")
+    .eq("post_id", post.id)
+    .eq("approved", true)
+    .order("created_at", { ascending: true });
+  return { post, comments: comments ?? [] };
+});
+
+export const updateAboutContent = createServerFn({ method: "POST" })
+  .inputValidator((d: { content: string; cover_image?: string | null }) =>
+    z.object({
+      content: z.string().max(200000),
+      cover_image: z.string().optional().nullable(),
+    }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("posts")
+      .update({ content: data.content, cover_image: data.cover_image ?? null })
+      .eq("slug", ABOUT_SLUG);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listRelatedPosts = createServerFn({ method: "GET" })
+  .inputValidator((d: { categorySlug?: string | null; excludeSlug?: string; limit?: number }) =>
+    z.object({
+      categorySlug: z.string().nullable().optional(),
+      excludeSlug: z.string().optional(),
+      limit: z.number().min(1).max(20).optional(),
+    }).parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("posts")
+      .select("id, slug, title, cover_image, published_at, category:categories(slug, name)")
+      .eq("published", true)
+      .neq("slug", "_about")
+      .order("published_at", { ascending: false })
+      .limit(20);
+    if (error) throw new Error(error.message);
+    let filtered = rows ?? [];
+    if (data.categorySlug) filtered = filtered.filter((r: any) => r.category?.slug === data.categorySlug);
+    if (data.excludeSlug) filtered = filtered.filter((r: any) => r.slug !== data.excludeSlug);
+    return filtered.slice(0, data.limit ?? 5);
+  });

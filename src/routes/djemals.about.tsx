@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { getSetting, setSetting } from "@/lib/blog.functions";
+import { getAboutPost, updateAboutContent } from "@/lib/blog.functions";
+import { MarkdownEditor } from "@/components/MarkdownEditor";
 
 const aboutQ = queryOptions({
-  queryKey: ["setting", "about"],
-  queryFn: () => getSetting({ data: { key: "about" } }),
+  queryKey: ["about-post"],
+  queryFn: () => getAboutPost(),
 });
 
 export const Route = createFileRoute("/djemals/about")({
@@ -17,15 +18,19 @@ export const Route = createFileRoute("/djemals/about")({
 function AdminAbout() {
   const { data } = useSuspenseQuery(aboutQ);
   const qc = useQueryClient();
-  const save = useServerFn(setSetting);
-  const [value, setValue] = useState(data);
+  const save = useServerFn(updateAboutContent);
+  const [value, setValue] = useState(data?.post.content ?? "");
+  const [cover, setCover] = useState(data?.post.cover_image ?? "");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  useEffect(() => { setValue(data); }, [data]);
+  useEffect(() => {
+    setValue(data?.post.content ?? "");
+    setCover(data?.post.cover_image ?? "");
+  }, [data]);
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <div className="flex items-baseline justify-between">
         <h1 className="font-serif text-3xl font-bold">About Me</h1>
         <a href="/about" target="_blank" rel="noreferrer" className="text-sm text-muted-foreground hover:text-primary">
@@ -33,22 +38,28 @@ function AdminAbout() {
         </a>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Plain text with markdown-style images: <code>![alt](https://...)</code>. Blank line = new paragraph.
+        Rendered as a regular post with a comments section. Use markdown; images with <code>![alt](url)</code>.
       </p>
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        rows={24}
-        className="mt-4 w-full rounded-md border border-input bg-background p-4 font-mono text-sm"
-      />
+      <div className="mt-4 space-y-2">
+        <label className="text-xs uppercase tracking-wider text-muted-foreground">Cover image URL (optional)</label>
+        <input
+          className="w-full rounded border border-input bg-background px-3 py-2 text-sm"
+          value={cover ?? ""}
+          onChange={(e) => setCover(e.target.value)}
+          placeholder="https://..."
+        />
+      </div>
+      <div className="mt-4">
+        <MarkdownEditor value={value} onChange={setValue} height={520} />
+      </div>
       <div className="mt-4 flex items-center gap-3">
         <button
           disabled={busy}
           onClick={async () => {
             setBusy(true); setStatus(null);
             try {
-              await save({ data: { key: "about", value } });
-              await qc.invalidateQueries({ queryKey: ["setting", "about"] });
+              await save({ data: { content: value, cover_image: cover || null } });
+              await qc.invalidateQueries({ queryKey: ["about-post"] });
               setStatus("Saved.");
             } catch (err) {
               setStatus((err as Error).message);
