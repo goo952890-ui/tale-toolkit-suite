@@ -40,6 +40,37 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
+const IMG_RE = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+
+function renderInline(text: string, keyPrefix: string) {
+  const nodes: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  IMG_RE.lastIndex = 0;
+  while ((m = IMG_RE.exec(text)) !== null) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    nodes.push(
+      <img key={`${keyPrefix}-img-${m.index}`} src={m[2]} alt={m[1]} className="my-6 h-auto w-full rounded-lg" />,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
+function renderContent(content: string) {
+  const paras = content.split(/\n{2,}/);
+  return paras.map((para, i) => {
+    const trimmed = para.trim();
+    const onlyImg = /^!\[([^\]]*)\]\(([^)\s]+)\)$/.exec(trimmed);
+    if (onlyImg) {
+      return <img key={i} src={onlyImg[2]} alt={onlyImg[1]} className="my-6 h-auto w-full rounded-lg" />;
+    }
+    return <p key={i} className="whitespace-pre-wrap">{renderInline(para, String(i))}</p>;
+  });
+}
+
+
 type CommentRow = {
   id: string;
   post_id: string;
@@ -150,10 +181,9 @@ function PostPage() {
           <AdSlot size="leaderboard" />
         </div>
         <div className="mx-auto mt-10 max-w-3xl prose-blog">
-          {p.content.split("\n\n").map((para, i) => (
-            <p key={i}>{para}</p>
-          ))}
+          {renderContent(p.content)}
         </div>
+
         <div className="mx-auto my-12 max-w-3xl">
           <AdSlot size="inline" />
         </div>
