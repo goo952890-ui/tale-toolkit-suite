@@ -11,6 +11,40 @@ function slugify(s: string) {
     .slice(0, 80) || `post-${Date.now()}`;
 }
 
+const IMAGE_BUCKET = "post-images";
+const ALLOWED_MIME: Record<string, string> = {
+  "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png",
+  "image/webp": "webp", "image/gif": "gif", "image/avif": "avif",
+};
+
+export async function uploadImageToBucket(input: { data_url?: string; base64?: string; content_type?: string; filename?: string }) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  let contentType = input.content_type ?? "";
+  let base64 = input.base64 ?? "";
+  if (input.data_url) {
+    const m = /^data:([^;]+);base64,(.+)$/.exec(input.data_url);
+    if (!m) throw new Error("invalid data_url");
+    contentType = m[1];
+    base64 = m[2];
+  }
+  const ext = ALLOWED_MIME[contentType];
+  if (!ext) throw new Error(`unsupported image type: ${contentType}`);
+  const bin = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  if (bin.byteLength > 8 * 1024 * 1024) throw new Error("image too large (max 8MB)");
+  const key = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabaseAdmin.storage.from(IMAGE_BUCKET).upload(key, bin, {
+    contentType, upsert: false,
+  });
+  if (error) throw new Error(error.message);
+  return { key, url: `/api/public/images/${key}` };
+}
+
+export const uploadImage = createServerFn({ method: "POST" })
+  .inputValidator((d: { data_url: string }) => z.object({ data_url: z.string().min(10) }).parse(d))
+  .handler(async ({ data }) => uploadImageToBucket({ data_url: data.data_url }));
+
+
+
 export const listCategories = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
