@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DjemalsRouteImport } from './routes/djemals'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DjemalsIndexRouteImport } from './routes/djemals.index'
@@ -22,6 +23,11 @@ import { Route as DjemalsPostsIdRouteImport } from './routes/djemals.posts.$id'
 import { Route as ApiPublicPostsRouteImport } from './routes/api/public/posts'
 import { Route as ApiPublicCommentsRouteImport } from './routes/api/public/comments'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DjemalsRoute = DjemalsRouteImport.update({
   id: '/djemals',
   path: '/djemals',
@@ -86,6 +92,7 @@ const ApiPublicCommentsRoute = ApiPublicCommentsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/djemals': typeof DjemalsRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/djemals': typeof DjemalsRouteWithChildren
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/djemals/categories': typeof DjemalsCategoriesRoute
   '/djemals/comments': typeof DjemalsCommentsRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/djemals'
+    | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/categories'
     | '/djemals/comments'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/categories'
     | '/djemals/comments'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/djemals'
+    | '/sitemap.xml'
     | '/category/$slug'
     | '/djemals/categories'
     | '/djemals/comments'
@@ -172,6 +184,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DjemalsRoute: typeof DjemalsRouteWithChildren
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CategorySlugRoute: typeof CategorySlugRoute
   PostSlugRoute: typeof PostSlugRoute
   ApiPublicCommentsRoute: typeof ApiPublicCommentsRoute
@@ -180,6 +193,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/djemals': {
       id: '/djemals'
       path: '/djemals'
@@ -301,6 +321,7 @@ const DjemalsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DjemalsRoute: DjemalsRouteWithChildren,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   CategorySlugRoute: CategorySlugRoute,
   PostSlugRoute: PostSlugRoute,
   ApiPublicCommentsRoute: ApiPublicCommentsRoute,
