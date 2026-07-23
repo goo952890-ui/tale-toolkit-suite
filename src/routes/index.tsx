@@ -82,8 +82,8 @@ function Home() {
       <section className="container-blog grid gap-10 pb-16 lg:grid-cols-[1fr_320px]">
         <div className="grid gap-8 md:grid-cols-2">
           {rest.map((p, i) => (
-            <>
-              <article key={p.id} className="flex flex-col">
+            <Fragment key={p.id}>
+              <article className="flex flex-col">
                 <Link to="/post/$slug" params={{ slug: p.slug }} className="group">
                   <div className="aspect-[4/3] overflow-hidden rounded-md bg-gradient-to-br from-accent to-secondary">
                     {p.cover_image && (
@@ -103,11 +103,11 @@ function Home() {
                 </Link>
               </article>
               {i === 1 && (
-                <div key={`ad-${i}`} className="md:col-span-2">
+                <div className="md:col-span-2">
                   <AdSlot size="inline" />
                 </div>
               )}
-            </>
+            </Fragment>
           ))}
         </div>
         <aside className="space-y-8">
