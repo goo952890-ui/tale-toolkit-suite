@@ -49,9 +49,12 @@ function Page() {
         <h2 className="font-serif text-lg font-semibold">{editing ? "Edit category" : "New category"}</h2>
         <form className="mt-4 space-y-3" onSubmit={async (e) => {
           e.preventDefault();
-          await save({ data: { id: editing ?? undefined, name, slug: slug || undefined, description: desc || null } });
+          const trimmedName = name.trim();
+          if (!trimmedName) return;
+          await save({ data: { id: editing ?? undefined, name: trimmedName, slug: slug.trim() || undefined, description: desc.trim() || null } });
           setName(""); setSlug(""); setDesc(""); setEditing(null); refresh();
         }}>
+
           <input className="w-full rounded border border-input bg-background px-3 py-2 text-sm" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
           <input className="w-full rounded border border-input bg-background px-3 py-2 text-sm" placeholder="Slug (optional)" value={slug} onChange={(e) => setSlug(e.target.value)} />
           <textarea className="w-full rounded border border-input bg-background px-3 py-2 text-sm" rows={2} placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
