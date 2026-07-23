@@ -196,7 +196,12 @@ export const updateComment = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => commentUpdate.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      author_name?: string;
+      content?: string;
+      approved?: boolean;
+      created_at?: string;
+    } = {};
     if (data.author_name !== undefined) patch.author_name = data.author_name;
     if (data.content !== undefined) patch.content = data.content;
     if (data.approved !== undefined) patch.approved = data.approved;
